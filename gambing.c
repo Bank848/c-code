@@ -2,12 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <unistd.h> // For sleep function
-#include <dirent.h> // For directory operations
+#include <unistd.h> // สำหรับฟังก์ชัน sleep
+#include <dirent.h> // สำหรับการทำงานของโฟลเดอร์
 
 void addData(FILE *file, int result1, int result2, int result3, int balance);
 void Gamehistory(FILE *file);
-void readFile(const char *filename, int *minBalance, int *maxBalance, int *count); // Updated function prototype
+void readFile(const char *filename, int *minBalance, int *maxBalance, int *count); 
 double calculateExpectedValue();
 void playGame(int *balance, FILE *file);
 void spinAnimation(int *result1, int *result2, int *result3);
@@ -15,45 +15,45 @@ void listFiles();
 int readBalanceFromBottom(const char *filename);
 
 int main() {
-    int balance = 0; // Initialize balance to 0
+    int balance = 0; // กำหนดค่าเริ่มต้นของ balance เป็น 0
     int choice;
     double ev = calculateExpectedValue();
     char filename[50];
-    char filepath[100] = "./"; // Set the path to the current directory
+    char filepath[100] = "./"; // กำหนดตำแหน่งให้เป็นโฟลเดอร์ปัจจุบัน
 
-    // Display introductory message
+    // แสดงข้อความแนะนำเกม
     printf("===================================\n");
     printf("    Welcome to the Slot Machine Game!\n");
     printf("     Try your luck and win big!\n");
     printf("===================================\n");
 
-    // Main menu for starting a new game or loading an existing game
+    // เมนูหลักสำหรับเริ่มเกมใหม่หรือโหลดเซฟที่มีอยู่แล้ว
     printf("1. Start New Game\n");
     printf("2. Load Existing Game\n");
     printf("Choose an option: ");
     scanf("%d", &choice);
 
     if (choice == 1) {
-        // Start a new game
+        // เริ่มเกมใหม่
         printf("Enter a filename to save your game data (without .txt): ");
         scanf("%s", filename);
 
-        // Check if the filename already ends with .txt
+        // ตรวจสอบว่าชื่อไฟล์มี .txt อยู่แล้วหรือไม่
         if (strstr(filename, ".txt") == NULL) {
-            strcat(filename, ".txt"); // Append .txt if not present
+            strcat(filename, ".txt"); // ถ้าไม่มี ให้เพิ่ม .txt
         }
 
-        strcat(filepath, filename); // Combine path and filename
+        strcat(filepath, filename); // รวม path และชื่อไฟล์
 
-        FILE *file = fopen(filepath, "a+"); // Open file for appending data
+        FILE *file = fopen(filepath, "a+"); // เปิดไฟล์สำหรับเขียนข้อมูลต่อท้าย
 
         if (file == NULL) {
             printf("Error opening file!\n");
             return 1;
         }
 
-        // Initialize balance
-        balance = 1000; // Set initial balance for a new game
+        // กำหนดค่าเริ่มต้นของ balance
+        balance = 50000; // กำหนดเงินเริ่มต้นของเซฟเกมใหม่(เล่นรอบแรก)
         srand(time(0));
         printf("Expected loss per play (EV): %.3f\n", ev);
 
@@ -75,7 +75,7 @@ int main() {
                     break;
                 case 3: {
                     int minBalance = 1000, maxBalance = 0, count = 0;
-                    readFile(filepath, &minBalance, &maxBalance, &count); // Pass in pointers to update
+                    readFile(filepath, &minBalance, &maxBalance, &count); // ส่ง pointer เพื่ออัพเดตค่า
                     printf("Number of plays: %d\n", count);
                     printf("Minimum balance: %d\n", minBalance);
                     printf("Maximum balance: %d\n", maxBalance);
@@ -96,35 +96,35 @@ int main() {
     } 
     
     else if (choice == 2) {
-        // Load an existing game
+        // โหลดเกมที่มีอยู่แล้ว
         printf("Available save files:\n");
-        listFiles(); // List all .txt files in the directory
+        listFiles(); // แสดงรายชื่อไฟล์ .txt ทั้งหมดในโฟลเดอร์
 
         printf("Enter the filename you want to load (without .txt): ");
         scanf("%s", filename);
 
-        // Reset the filepath for loading the file
-        char filepath[100] = "./"; // Set the path to the current directory again
+        // รีเซ็ตตำแหน่งสำหรับโหลดเซฟไฟล์
+        char filepath[100] = "./"; // กำหนดให้ตำแหน่งเป็นโฟลเดอร์ปัจจุบันอีกครั้ง
 
-        // Check if the filename already ends with .txt
+        // ตรวจสอบว่าชื่อไฟล์มี .txt อยู่แล้วหรือไม่
         if (strstr(filename, ".txt") == NULL) {
-            strcat(filename, ".txt"); // Append .txt if not present
+            strcat(filename, ".txt"); // ถ้าไม่มี ให้เพิ่ม .txt
         }
 
-        strcat(filepath, filename); // Combine path and filename
+        strcat(filepath, filename); // รวม path และชื่อไฟล์
 
-        FILE *file = fopen(filepath, "r+"); // Open file for reading and updating
+        FILE *file = fopen(filepath, "r+"); // เปิดไฟล์สำหรับอ่านและเขียน
         if (file == NULL) {
             printf("Error opening file! File may not exist.\n");
             return 1;
         }
 
-        // Read the current balance from the file starting from the bottom
+        // อ่านยอดคงเหลือปัจจุบันจากไฟล์ โดยเริ่มจากท้ายไฟล์
         balance = readBalanceFromBottom(filepath);
         if (balance == -1) {
             printf("No balance found in the file!\n");
             fclose(file);
-            return 1; // Exit if no balance found
+            return 1; // ออกถ้าไม่พบยอดคงเหลือ
         }
 
         srand(time(0));
@@ -150,7 +150,7 @@ int main() {
                     break;
                 case 3: {
                     int minBalance = 1000, maxBalance = 0, count = 0;
-                    readFile(filepath, &minBalance, &maxBalance, &count); // Pass in pointers to update
+                    readFile(filepath, &minBalance, &maxBalance, &count); // ส่ง pointer เพื่ออัพเดตค่า
                     printf("Number of plays: %d\n", count);
                     printf("Minimum balance: %d\n", minBalance);
                     printf("Maximum balance: %d\n", maxBalance);
@@ -197,7 +197,7 @@ void addData(FILE *file, int result1, int result2, int result3, int balance) {
     fprintf(file, "Result: [%d] [%d] [%d], Balance: %d\n", result1, result2, result3, balance);
 }
 
-void Gamehistory(FILE *file) { //search
+void Gamehistory(FILE *file) { //search ฟังชั่น
     char line[256];
     rewind(file);
     printf("Game history:\n");
@@ -210,7 +210,7 @@ void readFile(const char *filename, int *minBalance, int *maxBalance, int *count
     int balance;
     char line[256];
 
-    FILE *file = fopen(filename, "r"); // Open file for reading
+    FILE *file = fopen(filename, "r"); // เปิดไฟล์เพื่ออ่านค่า
     if (file == NULL) {
         printf("Could not open file: %s\n", filename);
         return;
@@ -240,19 +240,19 @@ int readBalanceFromBottom(const char *filename) {
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
         printf("Could not open file: %s\n", filename);
-        return -1; // Indicate an error
+        return -1; //error return-1
     }
 
-    // Move to the end of the file
+    // ย้ายตำแหน่งไปที่ท้ายไฟล์
     fseek(file, 0, SEEK_END);
     long position = ftell(file);
     
-    // Read the file in reverse to find the last balance entry
+    // อ่านไฟล์ย้อนกลับจากล่างขึ้นบนเพื่อค้นหารายการยอดคงเหลือสุดท้าย
     char line[256];
     while (position > 0) {
         fseek(file, --position, SEEK_SET);
         if (fgetc(file) == '\n') {
-            if (position == 0) { // If we are at the start of the file
+            if (position == 0) { 
                 fseek(file, 0, SEEK_SET);
             } else {
                 continue;
@@ -263,12 +263,12 @@ int readBalanceFromBottom(const char *filename) {
             int balance;
             sscanf(line, "Balance: %d", &balance);
             fclose(file);
-            return balance; // Return the last found balance
+            return balance; // คืนค่ายอดเงินคงเหลือ
         }
     }
 
     fclose(file);
-    return -1; // Balance not found
+    return -1; // ไม่เจอยอดเงิน คืน-1
 }
 
 double calculateExpectedValue() {
@@ -294,33 +294,33 @@ void playGame(int *balance, FILE *file) {
     spinAnimation(&result1, &result2, &result3);
 
     printf("Final Slot results: [%d] [%d] [%d]\n", result1, result2, result3);
-    addData(file, result1, result2, result3, *balance); // Log the result to the file
+    addData(file, result1, result2, result3, *balance); // เซฟข้อมูลลงไฟล์
 
     // Check for winnings
-    if (result1 == result2 && result2 == result3) { // Win condition: all three results must be the same
+    if (result1 == result2 && result2 == result3) { // ถ้าชนะยอดเงินพนันx10
         printf("Jackpot! You won: %d\n", bet * 10);
         *balance += bet * 10;
     } else {
         printf("You lost your bet of: %d\n", bet);
     }
 
-    printf("Your remaining balance: %d\n", *balance); // Show remaining balance
+    printf("Your remaining balance: %d\n", *balance); // เหลือเงินทั้งหมดเท่าไหร่
     
-    // Save the updated balance after the game play
-    fseek(file, 0, SEEK_END); // Move to the end of the file before saving
+    
 }
 
 void spinAnimation(int *result1, int *result2, int *result3) {
     printf("Spinning the slot machine...\n");
 
-    for (int i = 0; i < 10; i++) { // Spin for 10 iterations
+    for (int i = 0; i < 10; i++) { // หมุน10รอบทำอนิเมชั่น
         *result1 = rand() % 10;
         *result2 = rand() % 10;
         *result3 = rand() % 10;
 
         printf("\rSlot results: [%d] [%d] [%d]   ", *result1, *result2, *result3);
-        fflush(stdout);
-        usleep(100000); // Delay for 0.1 seconds
+        fflush(stdout); // ใช้เพื่อบังคับให้ข้อมูลในบัฟเฟอร์ของ stdout แสดงผลทันที 
+                        ////โดยปกติ ข้อความที่แสดงผลบนหน้าจอจะถูกเก็บในบัฟเฟอร์ชั่วคราวก่อนที่จะถูกแสดงผล
+        usleep(100000); // ดีเลย์0.1
     }
     printf("\n");
 }

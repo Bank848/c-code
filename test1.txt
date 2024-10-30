@@ -1,0 +1,4 @@
+Result: [2] [8] [7], Balance: 900
+Result: [2] [0] [5], Balance: 800
+Result: [3] [2] [5], Balance: 677
+Result: [6] [3] [0], Balance: 577
