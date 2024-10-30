@@ -272,8 +272,8 @@ int readBalanceFromBottom(const char *filename) {
 }
 
 double calculateExpectedValue() {
-    double win3Match = 0.001 * 5;
-    double loseBet = 0.999 * -1;
+    double win3Match = 0.001 * 10; //โอกาสชนะได้เงินคูณ10คือ 0.1%
+    double loseBet = 0.999 * -1; //โอกาศโดนเจ้ามือรับประทาน99.9% เสีย 99.9สตางค์ต่อ1หมุน
 
     return win3Match + loseBet;
 }
