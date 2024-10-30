@@ -6,7 +6,7 @@
 #include <dirent.h> // For directory operations
 
 void addData(FILE *file, int result1, int result2, int result3, int balance);
-void searchData(FILE *file);
+void Gamehistory(FILE *file);
 void readFile(const char *filename, int *minBalance, int *maxBalance, int *count); // Updated function prototype
 double calculateExpectedValue();
 void playGame(int *balance, FILE *file);
@@ -60,8 +60,8 @@ int main() {
         while (balance > 0) {
             printf("\n--- Menu ---\n");
             printf("1. Play Slot Machine\n");
-            printf("2. Search Data And Save\n");
-            printf("3. Read Data from File\n");
+            printf("2. Game history\n");
+            printf("3. Summary of results\n");
             printf("4. Exit\n");
             printf("Choose an option: ");
             scanf("%d", &choice);
@@ -71,7 +71,7 @@ int main() {
                     playGame(&balance, file);
                     break;
                 case 2:
-                    searchData(file);
+                    Gamehistory(file);
                     break;
                 case 3: {
                     int minBalance = 1000, maxBalance = 0, count = 0;
@@ -135,8 +135,8 @@ int main() {
         while (balance > 0) {
             printf("\n--- Menu ---\n");
             printf("1. Play Slot Machine\n");
-            printf("2. Search Data And Save\n");
-            printf("3. Read Data from File\n");
+            printf("2. Game history\n");
+            printf("3. Summary of results\n");
             printf("4. Exit\n");
             printf("Choose an option: ");
             scanf("%d", &choice);
@@ -146,7 +146,7 @@ int main() {
                     playGame(&balance, file);
                     break;
                 case 2:
-                    searchData(file);
+                    Gamehistory(file);
                     break;
                 case 3: {
                     int minBalance = 1000, maxBalance = 0, count = 0;
@@ -197,7 +197,7 @@ void addData(FILE *file, int result1, int result2, int result3, int balance) {
     fprintf(file, "Result: [%d] [%d] [%d], Balance: %d\n", result1, result2, result3, balance);
 }
 
-void searchData(FILE *file) {
+void Gamehistory(FILE *file) { //search
     char line[256];
     rewind(file);
     printf("Game history:\n");
