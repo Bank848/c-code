@@ -15,10 +15,16 @@ void saveMinMax(FILE *file, const char *playerName, float minBalance, float maxB
 void Gamehistory(FILE *file, const char *playerName);
 void readFile(const char *filename, const char *playerName, float *minBalance, float *maxBalance, int *count);
 double calculateExpectedValue();
+double calculateBlackjackEV(int wins, int losses);
 void playGame(float *balance, FILE *file, const char *playerName);
+void playBlackjack(float *balance, FILE *file, const char *playerName);
 void spinAnimation(int *result1, int *result2, int *result3);
 float loadPlayerBalance(FILE *file, const char *playerName);
 void displayLeaderboard(const char *filename);
+#define MAX_CARDS 52  // Example value; adjust as needed
+#define BLACKJACK 21  // The value for a Blackjack hand
+#define DEALER_HIT 17  // Example threshold; adjust based on your game rules
+
 
 int main() {
     float balance = 0.0;
@@ -48,15 +54,16 @@ int main() {
         printf("Enter your name to start a new game: ");
         scanf("%s", playerName);
         balance = 50000; // Set initial balance for a new game
-        printf("Expected loss per play (EV): %.3f\n", ev);
+        printf("Expected loss per play (EV) in Slot Machine: %.3f\n", ev);
 
         while (balance > 0) {
             printf("\n--- Menu ---\n");
             printf("1. Play Slot Machine\n");
-            printf("2. Game history\n");
-            printf("3. Summary of results\n");
-            printf("4. Leaderboard\n");
-            printf("5. Exit\n");
+            printf("2. Play Blackjack\n");
+            printf("3. Game history\n");
+            printf("4. Summary of results\n");
+            printf("5. Leaderboard\n");
+            printf("6. Exit\n");
             printf("Choose an option: ");
             scanf("%d", &choice);
 
@@ -65,9 +72,12 @@ int main() {
                     playGame(&balance, file, playerName);
                     break;
                 case 2:
+                    playBlackjack(&balance, file, playerName);
+                    break;
+                case 3:
                     Gamehistory(file, playerName);
                     break;
-                case 3: {
+                case 4: {
                     float minBalance = 50000.0, maxBalance = 50000.0;
                     int count = 0;
                     readFile(filename, playerName, &minBalance, &maxBalance, &count);
@@ -77,10 +87,10 @@ int main() {
                     printf("Maximum balance: %.2f\n", maxBalance);
                     break;
                 }
-                case 4:
+                case 5:
                     displayLeaderboard(filename);
                     break;
-                case 5:
+                case 6:
                     printf("Thank you for playing, %s! You ended with a balance of %.2f.\n", playerName, balance);
                     fclose(file);
                     return 0;
@@ -104,15 +114,16 @@ int main() {
         }
 
         printf("Loaded game for %s with balance: %.2f\n", playerName, balance);
-        printf("Expected loss per play (EV): %.3f\n", ev);
+        printf("Expected loss per play (EV) in Slot Machine: %.3f\n", ev);
 
         while (balance > 0) {
             printf("\n--- Menu ---\n");
             printf("1. Play Slot Machine\n");
-            printf("2. Game history\n");
-            printf("3. Summary of results\n");
-            printf("4. Leaderboard\n");
-            printf("5. Exit\n");
+            printf("2. Play Blackjack\n");
+            printf("3. Game history\n");
+            printf("4. Summary of results\n");
+            printf("5. Leaderboard\n");
+            printf("6. Exit\n");
             printf("Choose an option: ");
             scanf("%d", &choice);
 
@@ -121,9 +132,12 @@ int main() {
                     playGame(&balance, file, playerName);
                     break;
                 case 2:
+                    playBlackjack(&balance, file, playerName);
+                    break;
+                case 3:
                     Gamehistory(file, playerName);
                     break;
-                case 3: {
+                case 4: {
                     float minBalance = balance, maxBalance = balance;
                     int count = 0;
                     readFile(filename, playerName, &minBalance, &maxBalance, &count);
@@ -133,10 +147,10 @@ int main() {
                     printf("Maximum balance: %.2f\n", maxBalance);
                     break;
                 }
-                case 4:
+                case 5:
                     displayLeaderboard(filename);
                     break;
-                case 5:
+                case 6:
                     printf("Thank you for playing, %s! You ended with a balance of %.2f.\n", playerName, balance);
                     fclose(file);
                     return 0;
@@ -331,4 +345,190 @@ double calculateExpectedValue() {
     double loseBet = 0.949 * -1;    // Adjusted probability of losing
 
     return win3Match + win2Match + loseBet;
+}
+
+void shuffleDeck(int *deck) {
+    for (int i = 0; i < MAX_CARDS; i++) {
+        deck[i] = i % 13 + 1; // Assign values 1-13 for cards
+    }
+    for (int i = 0; i < MAX_CARDS; i++) {
+        int r = rand() % MAX_CARDS;
+        int temp = deck[i];
+        deck[i] = deck[r];
+        deck[r] = temp;
+    }
+}
+
+void dealCard(int *deck, int *index, int *hand, int handSize) {
+    hand[handSize] = deck[(*index)++];
+}
+
+int calculateHandValue(int *hand, int handSize) {
+    int value = 0;
+    int aces = 0;
+    for (int i = 0; i < handSize; i++) {
+        if (hand[i] > 10) {
+            value += 10; // Face cards are worth 10
+        } else if (hand[i] == 1) {
+            aces++;
+            value += 11; // Aces are worth 11 initially
+        } else {
+            value += hand[i];
+        }
+    }
+    // Adjust for aces
+    while (value > BLACKJACK && aces) {
+        value -= 10;
+        aces--;
+    }
+    return value;
+}
+
+void displayHands(int *playerHand, int playerHandSize, int *dealerHand, int dealerHandSize, int dealerShowHand) {
+    printf("Dealer's Hand: ");
+    for (int i = 0; i < dealerHandSize; i++) {
+        if (i == 0 && !dealerShowHand) {
+            printf("?? "); // Hide the first card of dealer
+        } else {
+            printf("%d ", dealerHand[i]);
+        }
+    }
+    printf("\nPlayer's Hand: ");
+    for (int i = 0; i < playerHandSize; i++) {
+        printf("%d ", playerHand[i]);
+    }
+    printf("\n");
+}
+
+void playBlackjack(float *balance, FILE *file, const char *playerName) {
+    int playerHand[10], dealerHand[10];
+    int playerHandSize = 0, dealerHandSize = 0;
+    int deck[MAX_CARDS];
+    int index = 0;
+    int wins = 0;  // To count player wins
+    int losses = 0;  // To count player losses
+    int dealerTough = 0;  // 0 = easy, 1 = tough
+    float bet;
+    float minBet = *balance * 0.1; // Minimum bet is 10% of balance
+    char input[100];
+    
+    // Initialize the deck and shuffle
+        shuffleDeck(deck);
+    dealCard(deck, &index, playerHand, playerHandSize++);
+    dealCard(deck, &index, playerHand, playerHandSize++);
+    dealCard(deck, &index, dealerHand, dealerHandSize++);
+    dealCard(deck, &index, dealerHand, dealerHandSize++);
+
+    while (1) {
+        printf("\nYour current balance: %.2f\n", *balance);
+        printf("Enter your bet (or type 'back' to return to the menu): ");
+        scanf("%s", input);
+
+        if (strcmp(input, "back") == 0) {
+            printf("Returning to the main menu...\n");
+            return; // Exit the function to return to the main menu
+        }
+
+        do {
+            printf("Enter your bet amount (minimum 10%% of balance: %.2f): ", minBet);
+            scanf("%f", &bet);
+
+            if (bet < minBet) {
+                printf("The bet amount is too low. Please enter at least 10%% of your balance.\n");
+            } else if (bet > *balance) {
+                printf("You don't have enough money. Current balance: %.2f\n", *balance);
+                return;
+            }
+        } while (bet < minBet);
+
+        *balance -= bet;
+
+
+        printf("Your hand: ");
+        for (int i = 0; i < playerHandSize; i++) {
+            printf("%d ", playerHand[i]);
+        }
+        printf("\nDealer's hand: ");
+        for (int i = 0; i < dealerHandSize; i++) {
+            printf("%d ", dealerHand[i]);
+        }
+
+        playerHandSize = dealerHandSize = 0; // Reset hands
+        dealCard(deck, &index, playerHand, playerHandSize++);
+        dealCard(deck, &index, dealerHand, dealerHandSize++);
+        dealCard(deck, &index, playerHand, playerHandSize++);
+        dealCard(deck, &index, dealerHand, dealerHandSize++);
+
+        // Player's turn
+        while (1) {
+            printf("Your hand: ");
+            for (int i = 0; i < playerHandSize; i++) {
+                printf("%d ", playerHand[i]);
+            }
+            printf("(Value: %d)\n", calculateHandValue(playerHand, playerHandSize));
+            printf("Dealer's visible card: %d\n", dealerHand[0]);
+            printf("Balance: %.2f\n", *balance);
+            
+            char action;
+            printf("Do you want to (H)it or (S)tand? ");
+            scanf(" %c", &action);
+            
+            if (action == 'H' || action == 'h') {
+                dealCard(deck, &index, playerHand, playerHandSize++);
+                if (calculateHandValue(playerHand, playerHandSize) > BLACKJACK) {
+                    printf("You busted! Your hand value exceeded 21.\n");
+                    losses++;
+                    break; // Player loses
+                }
+            } else {
+                break; // Player stands
+            }
+        }
+
+        // Dealer's turn
+        if (calculateHandValue(playerHand, playerHandSize) <= BLACKJACK) {
+            while (calculateHandValue(dealerHand, dealerHandSize) < (dealerTough ? DEALER_HIT + 3 : DEALER_HIT)) {
+                dealCard(deck, &index, dealerHand, dealerHandSize++);
+            }
+
+            // Show dealer's hand
+            printf("Dealer's hand: ");
+            for (int i = 0; i < dealerHandSize; i++) {
+                printf("%d ", dealerHand[i]);
+            }
+            printf("(Value: %d)\n", calculateHandValue(dealerHand, dealerHandSize));
+
+            int playerValue = calculateHandValue(playerHand, playerHandSize);
+            int dealerValue = calculateHandValue(dealerHand, dealerHandSize);
+
+            if (dealerValue > BLACKJACK || playerValue > dealerValue) {
+                printf("You win!\n");
+                wins++;
+                *balance += bet * 2;
+            } else if (playerValue < dealerValue) {
+                printf("You lose.\n");
+                losses++;
+            } else {
+                printf("It's a tie!\n");
+            }
+        }
+
+        // Check win/loss conditions
+        if (wins > 3) {
+            dealerTough = 1; // Make dealer tougher
+            printf("The dealer is getting tougher!\n");
+        }
+
+        if (losses == 4) {
+            wins = 0; // Reset wins
+            losses = 0; // Reset losses
+            dealerTough = 0; // Reset dealer strategy
+            printf("The dealer has gone easy again.\n");
+        }
+
+        printf("Your current balance: %.2f\n", *balance);
+        addData(file, playerName, playerHand[0], playerHand[1], dealerHand[0], *balance); // Modify as needed
+    }
+
+    printf("You've run out of money. This is how gambling can lead to loss.\n");
 }
