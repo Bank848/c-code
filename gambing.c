@@ -75,7 +75,7 @@ int main() {
                     Gamehistory(file);
                     break;
                 case 3: {
-                    float minBalance = 1000.00, maxBalance = 0.00;
+                    float minBalance = 50000.00, maxBalance = 50000.00;
                     int count = 0;
                     readFile(filepath, &minBalance, &maxBalance, &count); // ส่ง pointer เพื่ออัพเดตค่า
                     printf("Number of plays: %d\n", count);
@@ -151,7 +151,7 @@ int main() {
                     Gamehistory(file);
                     break;
                 case 3: {
-                    float minBalance = 1000, maxBalance = 0;
+                    float minBalance = 50000.0, maxBalance = 50000.0;
                     int count = 0;
                     readFile(filepath, &minBalance, &maxBalance, &count); // ส่ง pointer เพื่ออัพเดตค่า
                     printf("Number of plays: %d\n", count);
@@ -196,8 +196,11 @@ void listFiles() {
 }
 
 void addData(FILE *file, int result1, int result2, int result3, float balance) {
-    fseek(file, 0, SEEK_END); // ย้ายตำแหน่งไปที่ท้ายไฟล์ก่อนบันทึก
-    fprintf(file, "Result: [%d] [%d] [%d], Balance: %.2f\n", result1, result2, result3, balance);
+    fseek(file, 0, SEEK_END);
+    if (fprintf(file, "Result: [%d] [%d] [%d], Balance: %.2f\n", result1, result2, result3, balance) < 0) {
+        perror("Error writing to file");
+    }
+    fflush(file);
 }
 
 void Gamehistory(FILE *file) { //search ฟังชั่น
@@ -213,30 +216,38 @@ void readFile(const char *filename, float *minBalance, float *maxBalance, int *c
     float balance;
     char line[256];
 
-    FILE *file = fopen(filename, "r"); // เปิดไฟล์เพื่ออ่านค่า
+    // Open the file for reading
+    FILE *file = fopen(filename, "r");
     if (file == NULL) {
         printf("Could not open file: %s\n", filename);
         return;
     }
 
+    // Print the name of the file
     printf("Data from %s:\n", filename);
-    while (fgets(line, sizeof(line), file)) {
-        // Print the line for debugging
-        printf("%s", line);
 
-        // Only count lines with "Result:"
+    // Read each line of the file
+    while (fgets(line, sizeof(line), file)) {
+        printf("%s", line); // Print the line for debugging
+
+        // Check if the line contains "Result:"
         if (strstr(line, "Result:") != NULL) {
-            sscanf(line, "Result: [%*d] [%*d] [%*d], Balance: %.2f", &balance);
-            if (balance < *minBalance) {
-                *minBalance = balance;
+            // Use sscanf to read the balance
+            if (sscanf(line, "Result: [%*d] [%*d] [%*d], Balance: %f", &balance) == 1) {
+                if (balance < *minBalance) {
+                    *minBalance = balance; // Update minBalance
+                }
+                if (balance > *maxBalance) {
+                    *maxBalance = balance; // Update maxBalance
+                }
+                (*count)++; // Increment the count
+            } else {
+                printf("Error parsing balance from line: %s", line); // Error handling
             }
-            if (balance > *maxBalance) {
-                *maxBalance = balance;
-            }
-            (*count)++; // Increment only for valid game plays
         }
     }
-    fclose(file);
+
+    fclose(file); // Close the file
 }
 
 int readBalanceFromBottom(const char *filename) {
@@ -263,8 +274,8 @@ int readBalanceFromBottom(const char *filename) {
         }
         fgets(line, sizeof(line), file);
         if (strstr(line, "Balance:") != NULL) {
-            int balance;
-            sscanf(line, "Balance: %.2f", &balance);
+            float balance;
+            sscanf(line, "Balance: %f", &balance);
             fclose(file);
             return balance; // คืนค่ายอดเงินคงเหลือ
         }
@@ -302,7 +313,6 @@ void playGame(float *balance, FILE *file) {
     spinAnimation(&result1, &result2, &result3);
 
     printf("Final Slot results: [%d] [%d] [%d]\n", result1, result2, result3);
-    addData(file, result1, result2, result3, *balance); // เซฟข้อมูลลงไฟล์
 
     // Check for winnings
     if (result1 == result2 && result2 == result3) { // ถ้าชนะยอดเงินพนันx10
@@ -313,7 +323,7 @@ void playGame(float *balance, FILE *file) {
     }
 
     printf("Your remaining balance: %.2f\n", *balance); // เหลือเงินทั้งหมดเท่าไหร่
-    
+    addData(file, result1, result2, result3, *balance); // เซฟข้อมูลลงไฟล์
     
 }
 
@@ -328,7 +338,7 @@ void spinAnimation(int *result1, int *result2, int *result3) {
         printf("\rSlot results: [%d] [%d] [%d]   ", *result1, *result2, *result3);
         fflush(stdout); // ใช้เพื่อบังคับให้ข้อมูลในบัฟเฟอร์ของ stdout แสดงผลทันที 
                         ////โดยปกติ ข้อความที่แสดงผลบนหน้าจอจะถูกเก็บในบัฟเฟอร์ชั่วคราวก่อนที่จะถูกแสดงผล
-        sleep(0.1); // ดีเลย์0.1
+        usleep(100000); // ดีเลย์0.1
     }
     printf("\n");
 }
