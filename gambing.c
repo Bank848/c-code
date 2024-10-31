@@ -286,6 +286,11 @@ void playGame(float *balance, FILE *file) {
     printf("Enter your bet amount: ");
     scanf("%f", &bet);
 
+    if (bet < *balance * 1/2) {
+        printf("Sorry! You have to place a bet of at least 50%% of your balance.");
+        return;
+    }
+
     if (bet > *balance) {
         printf("You don't have enough money to make this bet. Your current balance is: %.2f\n", *balance);
         return;
