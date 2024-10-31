@@ -294,12 +294,16 @@ double calculateExpectedValue() {
 
 void playGame(float *balance, FILE *file) {
     float bet;
-    printf("Enter your bet amount: ");
-    scanf("%f", &bet);
+    
+    while (1) { // ลูปที่ใช้ตรวจสอบจำนวนเงินเดิมพัน
+        printf("Enter your bet amount: ");
+        scanf("%f", &bet);
 
-    if (bet < *balance * 1/2) {
-        printf("Sorry! You have to place a bet of at least 50%% of your balance.");
-        return;
+        if (bet >= *balance * 1/2) { // ถ้าเงินเดิมพันมากกว่าหรือเท่ากับ 50% ของยอดคงเหลือ ออกจากลูป
+            break;
+        } else {
+            printf("Sorry! You have to place a bet of at least %.2f\n", *balance * 1/2);
+        }
     }
 
     if (bet > *balance) {
