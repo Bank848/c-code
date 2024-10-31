@@ -1,3 +1,0 @@
-Result: [2] [2] [3], Balance: 25000.00
-Result: [5] [2] [0], Balance: 12500.00
-Result: [4] [5] [9], Balance: 4500.00
