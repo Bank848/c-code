@@ -5,18 +5,19 @@
 #include <unistd.h> // สำหรับฟังก์ชัน sleep
 #include <dirent.h> // สำหรับการทำงานของโฟลเดอร์
 
-void addData(FILE *file, int result1, int result2, int result3, int balance);
+void addData(FILE *file, int result1, int result2, int result3, float balance);
 void Gamehistory(FILE *file);
-void readFile(const char *filename, int *minBalance, int *maxBalance, int *count); 
+void readFile(const char *filename, float *minBalance, float *maxBalance, int *count); 
 double calculateExpectedValue();
-void playGame(int *balance, FILE *file);
+void playGame(float *balance, FILE *file);
 void spinAnimation(int *result1, int *result2, int *result3);
 void listFiles();
 int readBalanceFromBottom(const char *filename);
 
 int main() {
-    int balance = 0; // กำหนดค่าเริ่มต้นของ balance เป็น 0
+    float balance = 0.0; // กำหนดค่าเริ่มต้นของ balance เป็น 0
     int choice;
+    int count = 0;
     double ev = calculateExpectedValue();
     char filename[50];
     char filepath[100] = "./"; // กำหนดตำแหน่งให้เป็นโฟลเดอร์ปัจจุบัน
@@ -74,15 +75,16 @@ int main() {
                     Gamehistory(file);
                     break;
                 case 3: {
-                    int minBalance = 1000, maxBalance = 0, count = 0;
+                    float minBalance = 1000.00, maxBalance = 0.00;
+                    int count = 0;
                     readFile(filepath, &minBalance, &maxBalance, &count); // ส่ง pointer เพื่ออัพเดตค่า
                     printf("Number of plays: %d\n", count);
-                    printf("Minimum balance: %d\n", minBalance);
-                    printf("Maximum balance: %d\n", maxBalance);
+                    printf("Minimum balance: %.2f\n", minBalance);
+                    printf("Maximum balance: %.2f\n", maxBalance);
                     break;
                 }
                 case 4:
-                    printf("Thank you for playing! You ended with a balance of %d.\n", balance);
+                    printf("Thank you for playing! You ended with a balance of %.2f.\n", balance);
                     fclose(file);
                     return 0;
                 default:
@@ -128,7 +130,7 @@ int main() {
         }
 
         srand(time(0));
-        printf("Loaded game with balance: %d\n", balance);
+        printf("Loaded game with balance: %.2f\n", balance);
         printf("Expected loss per play (EV): %.3f\n", ev);
 
 
@@ -149,15 +151,16 @@ int main() {
                     Gamehistory(file);
                     break;
                 case 3: {
-                    int minBalance = 1000, maxBalance = 0, count = 0;
+                    float minBalance = 1000, maxBalance = 0;
+                    int count = 0;
                     readFile(filepath, &minBalance, &maxBalance, &count); // ส่ง pointer เพื่ออัพเดตค่า
                     printf("Number of plays: %d\n", count);
-                    printf("Minimum balance: %d\n", minBalance);
-                    printf("Maximum balance: %d\n", maxBalance);
+                    printf("Minimum balance: %.2f\n", minBalance);
+                    printf("Maximum balance: %.2f\n", maxBalance);
                     break;
                 }
                 case 4:
-                    printf("Thank you for playing! You ended with a balance of %d.\n", balance);
+                    printf("Thank you for playing! You ended with a balance of %.2f.\n", balance);
                     fclose(file);
                     return 0;
                 default:
@@ -192,9 +195,9 @@ void listFiles() {
     closedir(dp);
 }
 
-void addData(FILE *file, int result1, int result2, int result3, int balance) {
+void addData(FILE *file, int result1, int result2, int result3, float balance) {
     fseek(file, 0, SEEK_END); // ย้ายตำแหน่งไปที่ท้ายไฟล์ก่อนบันทึก
-    fprintf(file, "Result: [%d] [%d] [%d], Balance: %d\n", result1, result2, result3, balance);
+    fprintf(file, "Result: [%d] [%d] [%d], Balance: %.2f\n", result1, result2, result3, balance);
 }
 
 void Gamehistory(FILE *file) { //search ฟังชั่น
@@ -206,8 +209,8 @@ void Gamehistory(FILE *file) { //search ฟังชั่น
     }
 }
 
-void readFile(const char *filename, int *minBalance, int *maxBalance, int *count) {
-    int balance;
+void readFile(const char *filename, float *minBalance, float *maxBalance, int *count) {
+    float balance;
     char line[256];
 
     FILE *file = fopen(filename, "r"); // เปิดไฟล์เพื่ออ่านค่า
@@ -223,7 +226,7 @@ void readFile(const char *filename, int *minBalance, int *maxBalance, int *count
 
         // Only count lines with "Result:"
         if (strstr(line, "Result:") != NULL) {
-            sscanf(line, "Result: [%*d] [%*d] [%*d], Balance: %d", &balance);
+            sscanf(line, "Result: [%*d] [%*d] [%*d], Balance: %.2f", &balance);
             if (balance < *minBalance) {
                 *minBalance = balance;
             }
@@ -261,7 +264,7 @@ int readBalanceFromBottom(const char *filename) {
         fgets(line, sizeof(line), file);
         if (strstr(line, "Balance:") != NULL) {
             int balance;
-            sscanf(line, "Balance: %d", &balance);
+            sscanf(line, "Balance: %.2f", &balance);
             fclose(file);
             return balance; // คืนค่ายอดเงินคงเหลือ
         }
@@ -278,13 +281,13 @@ double calculateExpectedValue() {
     return win3Match + loseBet;
 }
 
-void playGame(int *balance, FILE *file) {
-    int bet;
+void playGame(float *balance, FILE *file) {
+    float bet;
     printf("Enter your bet amount: ");
-    scanf("%d", &bet);
+    scanf("%f", &bet);
 
     if (bet > *balance) {
-        printf("You don't have enough money to make this bet. Your current balance is: %d\n", *balance);
+        printf("You don't have enough money to make this bet. Your current balance is: %.2f\n", *balance);
         return;
     }
 
@@ -298,13 +301,13 @@ void playGame(int *balance, FILE *file) {
 
     // Check for winnings
     if (result1 == result2 && result2 == result3) { // ถ้าชนะยอดเงินพนันx10
-        printf("Jackpot! You won: %d\n", bet * 10);
+        printf("Jackpot! You won: %.2f\n", bet * 10);
         *balance += bet * 10;
     } else {
-        printf("You lost your bet of: %d\n", bet);
+        printf("You lost your bet of: %.2f\n", bet);
     }
 
-    printf("Your remaining balance: %d\n", *balance); // เหลือเงินทั้งหมดเท่าไหร่
+    printf("Your remaining balance: %.2f\n", *balance); // เหลือเงินทั้งหมดเท่าไหร่
     
     
 }
@@ -320,7 +323,7 @@ void spinAnimation(int *result1, int *result2, int *result3) {
         printf("\rSlot results: [%d] [%d] [%d]   ", *result1, *result2, *result3);
         fflush(stdout); // ใช้เพื่อบังคับให้ข้อมูลในบัฟเฟอร์ของ stdout แสดงผลทันที 
                         ////โดยปกติ ข้อความที่แสดงผลบนหน้าจอจะถูกเก็บในบัฟเฟอร์ชั่วคราวก่อนที่จะถูกแสดงผล
-        usleep(100000); // ดีเลย์0.1
+        sleep(0.1); // ดีเลย์0.1
     }
     printf("\n");
 }
