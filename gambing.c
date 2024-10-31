@@ -109,26 +109,29 @@ int main() {
 
         printf("You've run out of money. This is how gambling can lead to loss.\n");
         fclose(file);
-    } else if (choice == 2) {
-        printf("Enter your name: ");
-        scanf("%s", playerName);
-        sprintf(filename, "save_%s.txt", playerName);
+    } 
+        else if (choice == 2) {
+            printf("Available save files:\n");
+            listFiles();
 
-        printf("Loading existing game...\n");
-        FILE *file = fopen(filename, "r");
+            printf("Enter your name: ");
+            scanf("%s", playerName);
 
-        if (file == NULL) {
-            printf("No save file found for player: %s\n", playerName);
-            return 1;
-        }
+            // ใช้ strcpy เพื่อสร้างชื่อไฟล์
+            strcpy(filename, "save_");
+            strcat(filename, playerName);
+            strcat(filename, ".txt");
 
-        balance = readBalanceFromBottom(filename);
-        if (balance == -1) {
-            printf("No balance found in the file!\n");
-            fclose(file);
-            return 1;
-        }
+            printf("Loading existing game from file: %s\n", filename);
 
+            FILE *file = fopen(filename, "r");
+            if (file == NULL) {
+                printf("No save file found for player: %s\n", playerName);
+                return 1;
+            }
+
+            // โค้ดอื่นๆ ที่คุณต้องการทำต่อไป
+        
         srand(time(0));
         printf("Loaded game for player: %s with balance: %.2f\n", playerName, balance);
         printf("Expected loss per play (EV): %.3f\n", ev);
@@ -273,6 +276,15 @@ int readBalanceFromBottom(const char *filename) {
                 fclose(file);
                 return balance;
             }
+        }
+    }
+    if (strstr(line, "Balance:") != NULL) {
+    float balance;
+    if (sscanf(line, "Result: [%*d] [%*d] [%*d], Balance: %f", &balance) == 1) {
+        fclose(file);
+        return balance;
+    } else {
+        printf("Error parsing balance from line: %s\n", line);
         }
     }
 
