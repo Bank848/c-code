@@ -1,5 +1,12 @@
-P1: Result: [6] [8] [5], Balance: 49500.00
-p2: Result: [6] [8] [5], Balance: 49900.00
+p1: Result: [6] [8] [5], Balance: 45000.00
+p1: Result: [1] [9] [8], Balance: 37000.00
+p2: Result: [6] [8] [5], Balance: 41000.00
+p1: Result: [6] [8] [5], Balance: 28000.00
+p1: Min Balance: 28000.00, Max Balance: 45000.00
+p1: Result: [6] [8] [5], Balance: 23000.00
 p3: Result: [6] [8] [5], Balance: 45000.00
-p3: Result: [1] [9] [8], Balance: 40500.00
-p3: Result: [6] [8] [5], Balance: 36450.00
+p3: Result: [1] [9] [8], Balance: 36000.00
+p3: Result: [6] [1] [8], Balance: 32000.00
+p3: Result: [3] [7] [2], Balance: 27000.00
+p3: Result: [8] [1] [8], Balance: 30000.00
+p3: Result: [9] [8] [4], Balance: 25000.00

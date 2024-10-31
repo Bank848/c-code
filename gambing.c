@@ -4,13 +4,21 @@
 #include <time.h>
 #include <unistd.h>
 
+typedef struct {
+    char playerName[50];
+    float maxBalance;
+} Player;
+
+// Function declarations
 void addData(FILE *file, const char *playerName, int result1, int result2, int result3, float balance);
+void saveMinMax(FILE *file, const char *playerName, float minBalance, float maxBalance);
 void Gamehistory(FILE *file, const char *playerName);
-void readFile(const char *filename, const char *playerName, float *minBalance, float *maxBalance, int *count); 
+void readFile(const char *filename, const char *playerName, float *minBalance, float *maxBalance, int *count);
 double calculateExpectedValue();
 void playGame(float *balance, FILE *file, const char *playerName);
 void spinAnimation(int *result1, int *result2, int *result3);
 float loadPlayerBalance(FILE *file, const char *playerName);
+void displayLeaderboard(const char *filename);
 
 int main() {
     float balance = 0.0;
@@ -47,7 +55,8 @@ int main() {
             printf("1. Play Slot Machine\n");
             printf("2. Game history\n");
             printf("3. Summary of results\n");
-            printf("4. Exit\n");
+            printf("4. Leaderboard\n");
+            printf("5. Exit\n");
             printf("Choose an option: ");
             scanf("%d", &choice);
 
@@ -62,12 +71,16 @@ int main() {
                     float minBalance = 50000.0, maxBalance = 50000.0;
                     int count = 0;
                     readFile(filename, playerName, &minBalance, &maxBalance, &count);
+                    saveMinMax(file, playerName, minBalance, maxBalance);
                     printf("Number of plays: %d\n", count);
                     printf("Minimum balance: %.2f\n", minBalance);
                     printf("Maximum balance: %.2f\n", maxBalance);
                     break;
                 }
                 case 4:
+                    displayLeaderboard(filename);
+                    break;
+                case 5:
                     printf("Thank you for playing, %s! You ended with a balance of %.2f.\n", playerName, balance);
                     fclose(file);
                     return 0;
@@ -98,7 +111,8 @@ int main() {
             printf("1. Play Slot Machine\n");
             printf("2. Game history\n");
             printf("3. Summary of results\n");
-            printf("4. Exit\n");
+            printf("4. Leaderboard\n");
+            printf("5. Exit\n");
             printf("Choose an option: ");
             scanf("%d", &choice);
 
@@ -113,12 +127,16 @@ int main() {
                     float minBalance = balance, maxBalance = balance;
                     int count = 0;
                     readFile(filename, playerName, &minBalance, &maxBalance, &count);
+                    saveMinMax(file, playerName, minBalance, maxBalance);
                     printf("Number of plays: %d\n", count);
                     printf("Minimum balance: %.2f\n", minBalance);
                     printf("Maximum balance: %.2f\n", maxBalance);
                     break;
                 }
                 case 4:
+                    displayLeaderboard(filename);
+                    break;
+                case 5:
                     printf("Thank you for playing, %s! You ended with a balance of %.2f.\n", playerName, balance);
                     fclose(file);
                     return 0;
@@ -138,9 +156,69 @@ int main() {
     return 0;
 }
 
+void displayLeaderboard(const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        printf("Error opening file for leaderboard!\n");
+        return;
+    }
+
+    Player players[100];
+    int count = 0;
+    char line[256];
+
+    // Parse player entries to find max balances
+    while (fgets(line, sizeof(line), file)) {
+        char playerName[50];
+        float balance;
+
+        if (sscanf(line, "%[^:]: Result: [%*d] [%*d] [%*d], Balance: %f", playerName, &balance) == 2) {
+            int found = 0;
+            for (int i = 0; i < count; i++) {
+                if (strcmp(players[i].playerName, playerName) == 0) {
+                    if (balance > players[i].maxBalance) {
+                        players[i].maxBalance = balance;
+                    }
+                    found = 1;
+                    break;
+                }
+            }
+            if (!found) {
+                strcpy(players[count].playerName, playerName);
+                players[count].maxBalance = balance;
+                count++;
+            }
+        }
+    }
+    fclose(file);
+
+    // Sort players by max balance in descending order
+    for (int i = 0; i < count - 1; i++) {
+        for (int j = i + 1; j < count; j++) {
+            if (players[i].maxBalance < players[j].maxBalance) {
+                Player temp = players[i];
+                players[i] = players[j];
+                players[j] = temp;
+            }
+        }
+    }
+
+    // Display leaderboard
+    printf("\n--- Leaderboard ---\n");
+    for (int i = 0; i < count; i++) {
+        printf("%d. %s - Max Balance: %.2f\n", i + 1, players[i].playerName, players[i].maxBalance);
+    }
+}
+
 void addData(FILE *file, const char *playerName, int result1, int result2, int result3, float balance) {
     fseek(file, 0, SEEK_END);
     fprintf(file, "%s: Result: [%d] [%d] [%d], Balance: %.2f\n", playerName, result1, result2, result3, balance);
+    fflush(file);
+}
+
+void saveMinMax(FILE *file, const char *playerName, float minBalance, float maxBalance) {
+    fseek(file, 0, SEEK_END);
+    fprintf(file, "%s: Min Balance: %.2f, Max Balance: %.2f\n", playerName, minBalance, maxBalance);
     fflush(file);
 }
 
@@ -149,7 +227,7 @@ void Gamehistory(FILE *file, const char *playerName) {
     rewind(file);
     printf("Game history for %s:\n", playerName);
     while (fgets(line, sizeof(line), file)) {
-        if (strstr(line, playerName) == line) { // Check if line starts with playerName
+        if (strstr(line, playerName) == line && !strstr(line, "Min Balance") && !strstr(line, "Max Balance")) { // Check if line starts with playerName and exclude min/max
             printf("%s", line);
         }
     }
@@ -194,7 +272,7 @@ float loadPlayerBalance(FILE *file, const char *playerName) {
 
 void playGame(float *balance, FILE *file, const char *playerName) {
     float bet;
-    float minBet = *balance * 0.1; // กำหนดเดิมพันขั้นต่ำเป็น 10% ของยอดคงเหลือ
+    float minBet = *balance * 0.1; // Set minimum bet to 10% of the balance
 
     do {
         printf("Enter your bet amount (minimum 10%% of balance: %.2f): ", minBet);
@@ -215,9 +293,13 @@ void playGame(float *balance, FILE *file, const char *playerName) {
 
     printf("Final Slot results: [%d] [%d] [%d]\n", result1, result2, result3);
 
+    // New winning conditions
     if (result1 == result2 && result2 == result3) {
-        printf("Jackpot! You won: %.2f\n", bet * 10);
-        *balance += bet * 10;
+        printf("Jackpot! You won: %.2f\n", bet * 15); // Increase jackpot payout to 15x
+        *balance += bet * 15;
+    } else if (result1 == result2 || result2 == result3 || result1 == result3) {
+        printf("You won: %.2f for matching two symbols!\n", bet * 2); // Win for two matching symbols
+        *balance += bet * 2;
     } else {
         printf("You lost your bet of: %.2f\n", bet);
     }
@@ -244,8 +326,9 @@ void spinAnimation(int *result1, int *result2, int *result3) {
 }
 
 double calculateExpectedValue() {
-    double win3Match = 0.001 * 10; //โอกาสชนะได้เงินคูณ10คือ 0.1%
-    double loseBet = 0.999 * -1; //โอกาศโดนเจ้ามือรับประทาน99.9% เสีย 99.9สตางค์ต่อ1หมุน
+    double win3Match = 0.001 * 15; // Adjusted probability for winning 10 times is now 0.1%
+    double win2Match = 0.05 * 2;    // 5% chance of matching two symbols and winning double
+    double loseBet = 0.949 * -1;    // Adjusted probability of losing
 
-    return win3Match + loseBet;
+    return win3Match + win2Match + loseBet;
 }
