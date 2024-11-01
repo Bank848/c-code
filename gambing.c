@@ -25,6 +25,41 @@ void displayLeaderboard(const char *filename);
 #define BLACKJACK 21  // The value for a Blackjack hand
 #define DEALER_HIT 17  // Example threshold; adjust based on your game rules
 
+void showPlayerNames(const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        printf("Error opening file!\n");
+        return;
+    }
+
+    char line[256];
+    char playerNames[100][50]; // Array to store unique player names
+    int nameCount = 0;
+
+    while (fgets(line, sizeof(line), file)) {
+        char playerName[50];
+        if (sscanf(line, "%[^:]", playerName) == 1) {
+            int isUnique = 1;
+            for (int i = 0; i < nameCount; i++) {
+                if (strcmp(playerNames[i], playerName) == 0) {
+                    isUnique = 0;
+                    break;
+                }
+            }
+            if (isUnique) {
+                strcpy(playerNames[nameCount], playerName);
+                nameCount++;
+            }
+        }
+    }
+    fclose(file);
+
+    printf("\n--- Available Players ---\n");
+    for (int i = 0; i < nameCount; i++) {
+        printf("%d. %s\n", i + 1, playerNames[i]);
+    }
+    printf("\n");
+}
 
 int main() {
     float balance = 0.0;
@@ -103,6 +138,7 @@ int main() {
 
     } else if (choice == 2) {
         // Load an existing game
+        showPlayerNames(filename);
         printf("Enter your name to load your game: ");
         scanf("%s", playerName);
 
@@ -287,9 +323,10 @@ float loadPlayerBalance(FILE *file, const char *playerName) {
 void playGame(float *balance, FILE *file, const char *playerName) {
     float bet;
     float minBet = *balance * 0.1; // Set minimum bet to 10% of the balance
+    char choice[10];  // Stores the player's choice to continue or go back to the menu
 
     do {
-        printf("Enter your bet amount (minimum 10%% of balance: %.2f): ", minBet);
+        printf("\nEnter your bet amount (minimum 10%% of balance: %.2f): ", minBet);
         scanf("%f", &bet);
 
         if (bet < minBet) {
@@ -307,7 +344,7 @@ void playGame(float *balance, FILE *file, const char *playerName) {
 
     printf("Final Slot results: [%d] [%d] [%d]\n", result1, result2, result3);
 
-    // New winning conditions
+    // Winning conditions
     if (result1 == result2 && result2 == result3) {
         printf("Jackpot! You won: %.2f\n", bet * 15); // Increase jackpot payout to 15x
         *balance += bet * 15;
@@ -320,6 +357,21 @@ void playGame(float *balance, FILE *file, const char *playerName) {
 
     printf("Your remaining balance: %.2f\n", *balance);
     addData(file, playerName, result1, result2, result3, *balance);
+
+    // Prompt the player if they want to play again or return to the menu
+    printf("\nWould you like to play again? Enter '1' to continue or '2' to return to the menu: ");
+    scanf("%s", choice);
+
+    // Check if player wants to go back to the menu
+    if (strcmp(choice, "2") == 0) {
+        return;
+    } else if (strcmp(choice, "1") != 0) {
+        printf("Invalid choice! Returning to the main menu.\n");
+        return;
+    }
+
+    // Recursive call to keep playing if the player entered '1'
+    playGame(balance, file, playerName);
 }
 
 
@@ -411,7 +463,8 @@ void playBlackjack(float *balance, FILE *file, const char *playerName) {
     float bet;
     float minBet = *balance * 0.1; // Minimum bet is 10% of balance
     char input[100];
-    
+    char choice[10];
+
     while (*balance > 0) {
         int playerHand[10], dealerHand[10];
         int playerHandSize = 0, dealerHandSize = 0;
@@ -447,7 +500,7 @@ void playBlackjack(float *balance, FILE *file, const char *playerName) {
 
         // Player's turn
         while (1) {
-            printf("Your hand: ");
+            printf("\nYour hand: ");
             for (int i = 0; i < playerHandSize; i++) {
                 printf("%d ", playerHand[i]);
             }
@@ -488,7 +541,7 @@ void playBlackjack(float *balance, FILE *file, const char *playerName) {
             int dealerValue = calculateHandValue(dealerHand, dealerHandSize);
 
             if (dealerValue > BLACKJACK || playerValue > dealerValue) {
-                printf("You win!\n");
+                printf("=========You win!=========\n");
                 wins++;
                 *balance += bet * 2; // Winning doubles the bet amount
             } else if (playerValue < dealerValue) {
@@ -517,9 +570,15 @@ void playBlackjack(float *balance, FILE *file, const char *playerName) {
         addData(file, playerName, playerHand[0], playerHand[1], dealerHand[0], *balance); // Modify as needed
 
         // Ask if the player wants to continue
-        printf("Do you want to bet again or go back to the menu? (bet/back): ");
-        scanf("%s", input);
-        if (strcmp(input, "back") == 0) {
+        // Prompt the player if they want to play again or return to the menu
+        printf("\nWould you like to play again? Enter '1' to continue or '2' to return to the menu: ");
+        scanf("%s", choice);
+
+        // Check if player wants to go back to the menu
+        if (strcmp(choice, "2") == 0) {
+            return;
+        } else if (strcmp(choice, "1") != 0) {
+            printf("Invalid choice! Returning to the main menu.\n");
             return;
         }
     }
