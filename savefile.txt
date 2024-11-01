@@ -27,3 +27,12 @@ p11: Result: [7] [11] [1], Balance: 34800.00
 p11: Result: [12] [10] [12], Balance: 29900.00
 p11: Result: [6] [11] [4], Balance: 24800.00
 p12: Result: [3] [10] [9], Balance: 44900.00
+p25: Result: [3] [10] [9], Balance: 45000.00
+?26: Result: [3] [10] [9], Balance: 44500.00
+p29: Result: [3] [10] [9], Balance: 45000.00
+p29: Result: [7] [7] [11], Balance: 37000.00
+p29: Result: [7] [3] [10], Balance: 42000.00
+p29: Result: [9] [3] [1], Balance: 57000.00
+p29: Result: [10] [3] [1], Balance: 107000.00
+p29: Result: [4] [8] [8], Balance: 119000.00
+p29: Result: [9] [11] [11], Balance: 99000.00

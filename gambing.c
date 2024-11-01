@@ -412,47 +412,33 @@ void playBlackjack(float *balance, FILE *file, const char *playerName) {
     float minBet = *balance * 0.1; // Minimum bet is 10% of balance
     char input[100];
     
-    // Initialize the deck and shuffle
-        shuffleDeck(deck);
-    dealCard(deck, &index, playerHand, playerHandSize++);
-    dealCard(deck, &index, playerHand, playerHandSize++);
-    dealCard(deck, &index, dealerHand, dealerHandSize++);
-    dealCard(deck, &index, dealerHand, dealerHandSize++);
+    while (*balance > 0) {
+        int playerHand[10], dealerHand[10];
+        int playerHandSize = 0, dealerHandSize = 0;
+        int deck[MAX_CARDS];
+        int index = 0;
+        float bet;
+        float minBet = *balance * 0.1; // Minimum bet is 10% of balance
 
-    while (1) {
-        printf("\nYour current balance: %.2f\n", *balance);
-        printf("Enter your bet (or type 'back' to return to the menu): ");
-        scanf("%s", input);
-
-        if (strcmp(input, "back") == 0) {
-            printf("Returning to the main menu...\n");
-            return; // Exit the function to return to the main menu
-        }
-
-        do {
-            printf("Enter your bet amount (minimum 10%% of balance: %.2f): ", minBet);
-            scanf("%f", &bet);
-
+        while (1) {
+            printf("Your balance: %.2f\n", *balance);
+            printf("Enter your bet (minimum %.2f): ", minBet);
+            scanf("%s", input);
+            bet = atof(input);
+            
             if (bet < minBet) {
-                printf("The bet amount is too low. Please enter at least 10%% of your balance.\n");
-            } else if (bet > *balance) {
-                printf("You don't have enough money. Current balance: %.2f\n", *balance);
-                return;
+                printf("Bet is too low. Minimum is %.2f\n", minBet);
+            } 
+            else if (bet > *balance) {
+                printf("Insufficient balance.\n");
+            } 
+            else {
+                *balance -= bet; // Deduct bet amount initially
+                break; // Exit loop once a valid bet is entered
             }
-        } while (bet < minBet);
-
-        *balance -= bet;
-
-
-        printf("Your hand: ");
-        for (int i = 0; i < playerHandSize; i++) {
-            printf("%d ", playerHand[i]);
         }
-        printf("\nDealer's hand: ");
-        for (int i = 0; i < dealerHandSize; i++) {
-            printf("%d ", dealerHand[i]);
-        }
-
+        
+        shuffleDeck(deck);
         playerHandSize = dealerHandSize = 0; // Reset hands
         dealCard(deck, &index, playerHand, playerHandSize++);
         dealCard(deck, &index, dealerHand, dealerHandSize++);
@@ -504,22 +490,23 @@ void playBlackjack(float *balance, FILE *file, const char *playerName) {
             if (dealerValue > BLACKJACK || playerValue > dealerValue) {
                 printf("You win!\n");
                 wins++;
-                *balance += bet * 2;
+                *balance += bet * 2; // Winning doubles the bet amount
             } else if (playerValue < dealerValue) {
                 printf("You lose.\n");
                 losses++;
             } else {
                 printf("It's a tie!\n");
+                *balance += bet; // Refund bet on tie
             }
         }
 
-        // Check win/loss conditions
+        // Check win/loss conditions and adjust dealer difficulty
         if (wins > 3) {
             dealerTough = 1; // Make dealer tougher
             printf("The dealer is getting tougher!\n");
         }
 
-        if (losses == 4) {
+        if (losses == 6) {
             wins = 0; // Reset wins
             losses = 0; // Reset losses
             dealerTough = 0; // Reset dealer strategy
@@ -528,6 +515,13 @@ void playBlackjack(float *balance, FILE *file, const char *playerName) {
 
         printf("Your current balance: %.2f\n", *balance);
         addData(file, playerName, playerHand[0], playerHand[1], dealerHand[0], *balance); // Modify as needed
+
+        // Ask if the player wants to continue
+        printf("Do you want to bet again or go back to the menu? (bet/back): ");
+        scanf("%s", input);
+        if (strcmp(input, "back") == 0) {
+            return;
+        }
     }
 
     printf("You've run out of money. This is how gambling can lead to loss.\n");
