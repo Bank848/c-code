@@ -1,0 +1,3 @@
+Game: 1	 [LOSE]	 [ 9 ] [ 7 ] [ 5 ]	Bet: 5000.00  	Balance: 45000.00
+Game: 2	 [LOSE]	 [ 8 ] [ 3 ] [ 8 ]	Bet: 5000.00  	Balance: 40000.00
+Game: 3	 [LOSE]	 [ 9 ] [ 6 ] [ 6 ]	Bet: 5000.00  	Balance: 35000.00

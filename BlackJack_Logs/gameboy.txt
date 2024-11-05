@@ -1,0 +1,4 @@
+Game: 1 [ WIN ]	Player: [ 20 ] 	Dealer: [ 16 ]	Bet: 5000.00  Balance: 45000.00
+Game: 2 [ WIN ]	Player: [ 18 ] 	Dealer: [ 17 ]	Bet: 5000.00  Balance: 50000.00
+Game: 3 [ WIN ]	Player: [ 19 ] 	Dealer: [ 19 ]	Bet: 5000.00  Balance: 50000.00
+Game: 4 [ LOSE ]	Player: [ 25 ] 	Dealer: [ 17 ]	Bet: 5000.00  Balance: 45000.00

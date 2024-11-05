@@ -1,0 +1,1 @@
+Game: 1 [ WIN ]	Player: [ 18 ] 	Dealer: [ 18 ]	Bet: 5000.00  Balance: 35000.00
