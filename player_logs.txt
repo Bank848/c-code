@@ -1,2 +1,6 @@
 Player: gameboy Balance: 40000.00
 Player: gametest Balance: 35000.00
+Player: test Balance: 50000.00
+Player: ge Balance: 50000.00
+Player: tf Balance: 50000.00
+Player: tee Balance: 50000.00

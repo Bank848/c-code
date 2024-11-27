@@ -868,6 +868,9 @@ void printBlackjackLogo()
     printf("|  |_)  ||  `----./  _____  \\ |  `----.|  .  \\  |  `--'  | /  _____  \\ |  `----.|  .  \\         \n");
     printf("|______/ |_______/__/     \\__\\ \\______||__|\\__\\  \\______/ /__/     \\__\\ \\______||__|\\__\\ \n");
     printf("                                                                                                      \n");
+    printf("                          Blackjack Player EV Average: 0.43                                           \n");
+    printf("                          Blackjack Dealer EV Average: 0.57                                           \n");
+    printf("                                                                                                      \n");
 }
 void initializeBlackjackDeck(int deck[])
 {
@@ -1427,11 +1430,11 @@ int main(int argC, char *argV[])
                     PrintCasinoLogo();
                     printf("                   Player: %s\tBalance: %.2f                          \n", playerName, balance);
                     printf("\n-------------------------- Slot Machine ------------------------------\n");
-                    printf("1. 3 symbols match: 15x bet\n");
-                    printf("2. 5 symbols match: 45x bet\n");
-                    printf("3. 7 symbols match: 95x bet\n");
-                    printf("4. 9 symbols match: 150x bet\n");
-                    printf("5. 15 symbols match: 600x bet\n");
+                    printf("1. 3 symbols match: 15x bet EV:-0.85\n");
+                    printf("2. 5 symbols match: 45x bet EV:-0.9955\n");
+                    printf("3. 7 symbols match: 95x bet EV:-0.999905\n");
+                    printf("4. 9 symbols match: 150x bet EV:-0.9999985\n");
+                    printf("5. 15 symbols match: 600x bet EV:-0.999999999994\n");
                     printf("6. Return to main menu\n");
                     if (option != 1 && option != 2 && option != 3 && option != 4 && option != 5 && option != 6)
                     {
