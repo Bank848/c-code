@@ -34,7 +34,9 @@ int getch(void)
 #define SHOW_CURSOR() printf("\033[?25h")
 #define HIDE_CURSOR() printf("\033[?25l")
 #define DIRECTORY_PERMISSIONS 0777
-
+// ฟังก์ชันสร้างโฟลเดอร์หากยังไม่มี
+// รับชื่อโฟลเดอร์ และตรวจสอบว่ามีอยู่หรือไม่
+// หากไม่มี ให้สร้างโฟลเดอร์ด้วยสิทธิ์กำหนด
 void make_directory(const char *name)
 {
     struct stat st = {0};
@@ -86,7 +88,9 @@ const float MIN_BET_PERCENTAGE = MIN_BET_FACTOR * 100;
 #define DECK_SIZE 52
 #define BLACKJACK 21
 #define DEALER_HIT 16
-
+// ฟังก์ชันเลื่อนตำแหน่งเคอร์เซอร์ในหน้าจอคอนโซล
+// ใช้พารามิเตอร์ line และ column เพื่อระบุตำแหน่ง
+// ทำงานได้ในระบบที่รองรับ ANSI escape code
 void moveCursorTo(int line, int column)
 {
     printf("\033[%d;%dH", line, column);
@@ -198,6 +202,9 @@ int getGameCount(const char *playerName, const char *gameType)
     free(filepath);
     return gameCount;
 }
+// ฟังก์ชันแสดงหน้าจอโหลดพร้อมข้อความต้อนรับ
+// - หากเงินผู้เล่นเหลือ 0 จะแสดงข้อความรีเซ็ตข้อมูล
+// - แสดงแถบโหลดแบบ progress bar โดยเลื่อนทีละน้อย
 void LoadingScreen(const char *playerName, float *balance)
 {
     int progress = 0;
@@ -242,6 +249,11 @@ void LoadingScreen(const char *playerName, float *balance)
     SLEEP(1000);
     SHOW_CURSOR();
 }
+// ฟังก์ชันบันทึกข้อมูลผู้เล่นลงไฟล์
+// - อ่านข้อมูลเดิมจากไฟล์ player_logs.txt
+// - หากมีผู้เล่นเดิมอยู่ในไฟล์ จะแก้ไขยอดเงิน
+// - หากไม่มี จะเพิ่มผู้เล่นใหม่
+// - ใช้ไฟล์ชั่วคราว (temp.txt) เพื่อจัดการแก้ไขไฟล์เดิม
 void SavePlayerData(const char *playerName, float balance)
 {
     char *file_buffer = malloc(MAX_SIZE_STRING);
@@ -304,6 +316,7 @@ void SavePlayerData(const char *playerName, float balance)
         perror("Error renaming temporary file");
     }
 }
+// ฟังก์ชันรับชื่อผู้เล่นจากอินพุต
 void getPlayerName(char *playerName)
 {
     printf("Enter your name: ");
@@ -323,6 +336,7 @@ void getPlayerName(char *playerName)
     }
     playerName[non_space_count] = '\0';
 }
+// ฟังก์ชันแสดงโลโก้คาสิโน
 void PrintCasinoLogo()
 {
     printf("\033[1;33m        _..._                                            .-'''-.      \033[0m\n");
@@ -340,6 +354,7 @@ void PrintCasinoLogo()
     printf("\033[1;33m                  `--'  `\"                '--'   '--'                \033[0m\n");
     printf("\033[1;33m                       Welcome to the Casino!                         \033[0m\n");
 }
+// ฟังก์ชันแสดงรายชื่อผู้เล่นที่มีในไฟล์
 void showPlayerNames(FILE *player_log)
 {
     char *playerName = malloc(MAX_SIZE_STRING);
@@ -392,7 +407,7 @@ float loadPlayerBalance(FILE *player_log, const char *playerName)
     free(line);
     return -1;
 }
-
+// ฟังก์ชันประวัติการเล่นเกมของผู้เล่น
 void Gamehistory(const char *playerName)
 {
     int slotMachineWinCount = countLinesWithWord("[ WIN ]", playerName, "SlotMachine");
@@ -487,7 +502,7 @@ void Gamehistory(const char *playerName)
 }
 
 #define NUM_PROFILE_PICS 2
-
+// ฟังก์ชันแสดงภาพโปรไฟล์จากตัวเลือกที่กำหนด
 void displayProfilePic(int picID)
 {
     switch (picID)
@@ -517,6 +532,7 @@ void displayProfilePic(int picID)
         break;
     }
 }
+// ฟังก์ชันโปรไฟล์ของผู้เล่น แสดงข้อมูลเกมและสถานะทางการเงิน
 void Profile(const char *playerName, float balance)
 {
     int picID = rand() % NUM_PROFILE_PICS + 1;
@@ -585,6 +601,7 @@ int compareLines(const void *a, const void *b)
     }
     return 0;
 }
+// ฟังก์ชันแสดงกระดานผู้นำตามยอดเงินคงเหลือ
 void Leaderboard()
 {
     FILE *player_log = fopen(filename, "r");
@@ -626,7 +643,7 @@ void Leaderboard()
     printf("Press [ANY KEY] to return to the menu.\n");
     getchar();
 }
-
+// ฟังก์ชันบันทึกข้อมูลเกม Slot Machine
 void addData_SlotMachine(const char *playerName, int result[], int reel, float balance, float bet, int doWin)
 {
     char *filepath = SlotMachine_File(playerName);
@@ -670,6 +687,11 @@ int JackpotChecker_IfAllIndexAreEqual(int result[], int size)
     }
     return 1;
 }
+// ฟังก์ชันเล่นเกม Slot Machine
+// - รับตัวเลือกจากผู้เล่นในการเลือกจำนวนรีล
+// - คำนวณเดิมพันที่เหมาะสมตามยอดเงินคงเหลือ
+// - หากชนะหรือแจ็กพอต จะเพิ่มยอดเงิน
+// - บันทึกผลการเล่นลงไฟล์ของผู้เล่น
 void SlotMachine(FILE *player_log, const char *playerName, float *balance, int *option)
 {
     int doWin = 0;
@@ -822,7 +844,7 @@ void SlotMachine(FILE *player_log, const char *playerName, float *balance, int *
     free(slot_buffer);
     *option = 1;
 }
-
+// ฟังก์ชันบันทึกข้อมูลเกม BlackJack
 void addData_BlackJack(const char *playerName, int playerValue, int dealerValue, float balance, float bet, int doWin)
 {
     char *filepath = BlackJack_File(playerName);
@@ -857,6 +879,7 @@ void addData_BlackJack(const char *playerName, int playerValue, int dealerValue,
     fclose(blackjack_log);
     free(filepath);
 }
+// ฟังก์ชันพิมพ์โลโก้เกม BlackJack
 void printBlackjackLogo()
 {
     printf("\033[1;33m.______   __          ___       ______  __  ___        __      ___       ______  __  ___            \033[0\n");
@@ -870,6 +893,7 @@ void printBlackjackLogo()
     printf("\033[1;33m                          Blackjack Dealer EV Average: 0.57                                           \033[0m\n");
     printf("                                                                                                      \n");
 }
+// ฟังก์ชันเตรียมสำรับไพ่สำหรับเกม BlackJack
 void initializeBlackjackDeck(int deck[])
 {
     int cardValues[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10}; // A, 2-10, J, Q, K
@@ -883,6 +907,7 @@ void initializeBlackjackDeck(int deck[])
         }
     }
 }
+// ฟังก์ชันสับไพ่
 void shuffleDeck(int deck[])
 {
     for (int i = DECK_SIZE - 1; i > 0; i--)
@@ -893,10 +918,12 @@ void shuffleDeck(int deck[])
         deck[j] = temp;
     }
 }
+// ฟังก์ชันแจกไพ่ให้ผู้เล่นหรือดีลเลอร์
 void dealCard(int *deck, int *index, int *hand, int handSize)
 {
     hand[handSize] = deck[(*index)++];
 }
+// ฟังก์ชันคำนวณมูลค่ามือไพ่
 int calculateHandValue(int *hand, int handSize)
 {
     int value = 0;
@@ -930,6 +957,7 @@ int calculateHandValue(int *hand, int handSize)
 
     return value;
 }
+// ฟังก์ชันเริ่มต้นพื้นที่แสดงไพ่ในเกม BlackJack
 void initializeBlackjackArea(int PlayerHand[], int DealerHand[])
 {
     moveCursorTo(14, 0);
@@ -965,6 +993,11 @@ void initializeBlackjackArea(int PlayerHand[], int DealerHand[])
     printf("\n\t[ DECKS ]\n");
     printf("\nPlayer Hand: \033[1;32m[ %d ] [ %d ]\033[0m\n", PlayerHand[0], PlayerHand[1]);
 }
+// ฟังก์ชันเล่นเกม BlackJack
+// - รับจำนวนเงินเดิมพันที่ผู้เล่นต้องการ
+// - แจกไพ่ให้ผู้เล่นและดีลเลอร์ พร้อมคำนวณแต้ม
+// - ผู้เล่นเลือกที่จะจั่ว (Hit) หรือหยุด (Stand)
+// - จบเกมด้วยการคำนวณผู้ชนะและบันทึกผลลัพธ์
 void BlackJack(FILE *player_log, const char *playerName, float *balance, int *option)
 {
     float bet = *balance;

@@ -35,7 +35,7 @@ int getch(void)
 #define HIDE_CURSOR() printf("\033[?25l")
 #define DIRECTORY_PERMISSIONS 0777
 
-void make_directory(const char *name)
+void make_directory(const char *name) // สร้างโฟลเดอร์บันทึกเกมถ้าไม่มี
 {
     struct stat st = {0};
 
@@ -126,12 +126,14 @@ char *getFilePathForGameType(const char *playerName, const char *gameType)
     }
     return NULL;
 }
+// นับจำนวนบรรทัดในไฟล์ที่มีคำเฉพาะ (word) สำหรับเกมประเภทที่ระบุ (gameType)
 int countLinesWithWord(const char *word, const char *playerName, const char *gameType)
 {
+    // รับเส้นทางไฟล์ตามชื่อผู้เล่นและประเภทเกม
     char *filepath = getFilePathForGameType(playerName, gameType);
     if (filepath == NULL)
     {
-        return -1;
+        return -1; // คืนค่า -1 ถ้าเส้นทางไฟล์ไม่ถูกต้อง
     }
 
     FILE *game_log = fopen(filepath, "r");
@@ -140,8 +142,9 @@ int countLinesWithWord(const char *word, const char *playerName, const char *gam
     {
         fprintf(stderr, "You haven't played %s yet\n", gameType);
         free(filepath);
-        return -1;
+        return -1; // คืนค่า -1 ถ้าเปิดไฟล์ไม่ได้
     }
+    // ใช้ Buffer ขนาดใหญ่เพื่ออ่านบรรทัดในไฟล์
     char *count_buffer = malloc(MAX_SIZE_STRING);
     int count = 0;
     rewind(game_log);
@@ -150,7 +153,7 @@ int countLinesWithWord(const char *word, const char *playerName, const char *gam
 
         if (strstr(count_buffer, word) != NULL)
         {
-            count++;
+            count++; // เพิ่มจำนวนเมื่อพบคำที่ต้องการ
         }
     }
 
@@ -158,7 +161,7 @@ int countLinesWithWord(const char *word, const char *playerName, const char *gam
     fclose(game_log);
     free(count_buffer);
     free(filepath);
-    return count;
+    return count; // คืนค่าจำนวนบรรทัดที่พบคำ
 }
 int getGameCount(const char *playerName, const char *gameType)
 {
@@ -243,8 +246,8 @@ void LoadingScreen(const char *playerName, float *balance)
     SLEEP(1000);
     SHOW_CURSOR();
 }
-void SavePlayerData(const char *playerName, float balance)
-{
+void SavePlayerData(const char *playerName, float balance) //บันทึกข้อมูลผู้เล่นลงไฟล์ รวมถึงอัปเดตยอดเงินคงเหลือ
+{                                                           //ใช้temp fileเพื่อป้องกันการสูญหายของข้อมูล
     char *file_buffer = malloc(MAX_SIZE_STRING);
     if (file_buffer == NULL)
     {
@@ -394,12 +397,12 @@ float loadPlayerBalance(FILE *player_log, const char *playerName)
     return -1;
 }
 
-void Gamehistory(const char *playerName)
+void Gamehistory(const char *playerName) //แสดงประวัติการเล่นเกม Slot Machine และ BlackJack พร้อมผลลัพธ์
 {
     int slotMachineWinCount = countLinesWithWord("[ WIN ]", playerName, "SlotMachine");
     int slotMachineLoseCount = countLinesWithWord("[ LOSE ]", playerName, "SlotMachine");
     int slotMachineGameCount = getGameCount(playerName, "SlotMachine");
-
+//รองรับการสลับหน้าจอระหว่างเกม Slot Machine และ BlackJack
     int blackjackWinCount = countLinesWithWord("[ WIN ]", playerName, "BlackJack");
     int blackjackLoseCount = countLinesWithWord("[ LOSE ]", playerName, "BlackJack");
     int blackjackTieCount = countLinesWithWord("[ TIE ]", playerName, "BlackJack");
@@ -586,38 +589,40 @@ int compareLines(const void *a, const void *b)
     }
     return 0;
 }
-void Leaderboard()
+void Leaderboard() //แสดงรายชื่อผู้เล่นเรียงตามยอดเงินคงเหลือ ใช้ qsort เพื่อเรียงข้อมูล
 {
+    // เปิดไฟล์บันทึกผู้เล่น
     FILE *player_log = fopen(filename, "r");
     if (!player_log)
     {
-        perror("Error opening file");
+        perror("Error opening file"); // แสดงข้อผิดพลาดหากเปิดไฟล์ไม่ได้
         return;
     }
 
     printf("=================================================\n");
     printf("                   Leaderboard                   \n");
     printf("=================================================\n");
-
+    
     Player players[MAX_PLAYERS];
     int count = 0;
-
+    // อ่านข้อมูลผู้เล่นและยอดเงินจากไฟล์
     char line[MAX_SIZE_STRING];
     while (fgets(line, MAX_SIZE_STRING, player_log) && count < MAX_PLAYERS)
-    {
+    {   
+        // Parse ข้อมูลจากไฟล์ เช่น "Player: NAME Balance: VALUE"
         if (sscanf(line, "Player: %s Balance: %f", players[count].playerName, &players[count].balance) == 2)
         {
-            count++;
+            count++; // เพิ่มจำนวนผู้เล่นที่อ่านสำเร็จ
         }
         else
         {
-            printf("Warning: Could not parse line: %s\n", line);
+            printf("Warning: Could not parse line: %s\n", line); // แจ้งเตือนเมื่ออ่านข้อมูลไม่ได้
         }
     }
     fclose(player_log);
-
+    // จัดเรียงข้อมูลผู้เล่นตามยอดเงิน
     qsort(players, count, sizeof(Player), compareLines);
-
+    // แสดงข้อมูลผู้เล่นแต่ละคนในLeaderboard
     for (int i = 0; i < count; i++)
     {
         printf("%d. Player: %-20s Balance: %.2f\n", i + 1, players[i].playerName, players[i].balance);
@@ -625,10 +630,10 @@ void Leaderboard()
 
     printf("=================================================\n");
     printf("Press [ANY KEY] to return to the menu.\n");
-    getchar();
+    getchar(); // รอการกดปุ่มจากผู้ใช้ก่อนออก
 }
 
-void addData_SlotMachine(const char *playerName, int result[], int reel, float balance, float bet, int doWin)
+void addData_SlotMachine(const char *playerName, int result[], int reel, float balance, float bet, int doWin) // บันทึกข้อมูลเกม SlotMachine ของผู้เล่นลงในไฟล์บันทึก
 {
     char *filepath = SlotMachine_File(playerName);
     FILE *slotmachine_log = fopen(filepath, "a+");
@@ -671,7 +676,7 @@ int JackpotChecker_IfAllIndexAreEqual(int result[], int size)
     }
     return 1;
 }
-void SlotMachine(FILE *player_log, const char *playerName, float *balance, int *option)
+void SlotMachine(FILE *player_log, const char *playerName, float *balance, int *option) //เกม Slot Machine ที่จำลองวงล้อหมุนและคำนวณผลลัพธ์ตามการเดิมพัน
 {
     int doWin = 0;
     float bet = *balance;
@@ -740,7 +745,7 @@ void SlotMachine(FILE *player_log, const char *playerName, float *balance, int *
 
                 printf("\nSlot Machine %d symbols match: %dx bet", reel, BET_MULTIPLIER);
                 printf("\nPlayer: %s\tBalance: %.2f", playerName, *balance);
-                if (choice == '1' || bet < minBet || bet > *balance || !isNumeric(slot_buffer))
+                if (choice == '1' || bet < minBet || bet > *balance || !isNumeric(slot_buffer)) //เดิมพันขั้นต่ำ (ขั้นต่ำ 10% ของยอดเงิน)
                 {
                     if (!isNumeric(slot_buffer))
                     {
@@ -778,9 +783,9 @@ void SlotMachine(FILE *player_log, const char *playerName, float *balance, int *
         printf("Press any key to stop the slot machine!\n");
 
         HIDE_CURSOR();
-        while (!kbhit())
+        while (!kbhit()) //เอฟเฟกต์การหมุนสล็อต
         {
-            for (int i = 0; i < reel; i++)
+            for (int i = 0; i < reel; i++) 
             {
                 result[i] = (rand() % 9) + 1;
                 moveCursorTo(2, 5 + (i * 7));
@@ -809,7 +814,7 @@ void SlotMachine(FILE *player_log, const char *playerName, float *balance, int *
         }
         moveCursorTo(6, 0);
         printf("Player: %s\tBalance: %.2f                ", playerName, *balance);
-        addData_SlotMachine(playerName, result, reel, *balance, bet, doWin);
+        addData_SlotMachine(playerName, result, reel, *balance, bet, doWin); // บันทึกข้อมูลเกม SlotMachine ของผู้เล่นลงในไฟล์บันทึก
         moveCursorTo(9, 0);
         SHOW_CURSOR();
         printf("                                                ");
@@ -825,7 +830,7 @@ void SlotMachine(FILE *player_log, const char *playerName, float *balance, int *
     *option = 1;
 }
 
-void addData_BlackJack(const char *playerName, int playerValue, int dealerValue, float balance, float bet, int doWin)
+void addData_BlackJack(const char *playerName, int playerValue, int dealerValue, float balance, float bet, int doWin) // บันทึกข้อมูลเกม BlackJack ของผู้เล่นลงในไฟล์บันทึก
 {
     char *filepath = BlackJack_File(playerName);
 
@@ -885,7 +890,7 @@ void initializeBlackjackDeck(int deck[])
         }
     }
 }
-void shuffleDeck(int deck[])
+void shuffleDeck(int deck[]) //สับไพ่
 {
     for (int i = DECK_SIZE - 1; i > 0; i--)
     {
@@ -895,12 +900,12 @@ void shuffleDeck(int deck[])
         deck[j] = temp;
     }
 }
-void dealCard(int *deck, int *index, int *hand, int handSize)
+void dealCard(int *deck, int *index, int *hand, int handSize) //แจกไพ่
 {
     hand[handSize] = deck[(*index)++];
 }
-int calculateHandValue(int *hand, int handSize)
-{
+int calculateHandValue(int *hand, int handSize) //คำนวณค่าของมือไพ่ในเกม BlackJack
+{                                               //คำนึงถึงการคำนวณค่า A (Ace) ที่เปลี่ยนค่าได้ระหว่าง 1 และ 11 และ รองรับการจัดการไพ่ในหลายมือ
     int value = 0;
     int aces = 0;
     int aces_position = 0;
@@ -967,7 +972,7 @@ void initializeBlackjackArea(int PlayerHand[], int DealerHand[])
     printf("\n\t[ DECKS ]\n");
     printf("\nPlayer Hand: [ %d ] [ %d ]\n", PlayerHand[0], PlayerHand[1]);
 }
-void BlackJack(FILE *player_log, const char *playerName, float *balance, int *option)
+void BlackJack(FILE *player_log, const char *playerName, float *balance, int *option) //แจกไพ่, คำนวณแต้ม, ตัดสินผลแพ้ชนะ
 {
     float bet = *balance;
     float minBet = *balance * MIN_BET_FACTOR;
@@ -994,7 +999,7 @@ void BlackJack(FILE *player_log, const char *playerName, float *balance, int *op
                 CLEAR_SCREEN();
                 printBlackjackLogo();
                 printf("Player: %s\tBalance: %.2f", playerName, *balance);
-                if (choice == '1' || bet < minBet || bet > *balance || !isNumeric(bet_buffer))
+                if (choice == '1' || bet < minBet || bet > *balance || !isNumeric(bet_buffer)) //เดิมพันขั้นต่ำ (ขั้นต่ำ 10% ของยอดเงิน)
                 {
                     if (!isNumeric(bet_buffer))
                     {
@@ -1042,9 +1047,9 @@ void BlackJack(FILE *player_log, const char *playerName, float *balance, int *op
         SHOW_CURSOR();
         moveCursorTo(17, 0);
         printf("\nWhat would you like to do?");
-        printf("\nPress [ENTER] or [ANY KEYS] to hit");
-        printf("\nPress [S] to stand");
-        printf("\nPress [D] to double down\n");
+        printf("\nPress [ENTER] or [ANY KEYS] to hit"); //จั่วไพ่
+        printf("\nPress [S] to stand"); //พอแล้วเอาไพ่แค่นี้ละ
+        printf("\nPress [D] to double down\n"); //เพิ่มเงินเดิมพัน 2 เท่า
         gameChoice = getchar();
         while (getchar() != '\n')
             ;
@@ -1155,7 +1160,7 @@ void BlackJack(FILE *player_log, const char *playerName, float *balance, int *op
         }
         moveCursorTo(8, 0);
         printf("Player: %s\tBalance: %.2f                        ", playerName, *balance);
-        addData_BlackJack(playerName, playerValue, dealerValue, *balance, bet, doWin);
+        addData_BlackJack(playerName, playerValue, dealerValue, *balance, bet, doWin); // บันทึกข้อมูลเกม BlackJack ของผู้เล่นลงในไฟล์บันทึก
         SHOW_CURSOR();
         moveCursorTo(18, 0);
         printf("Would you like to play again?\n");
